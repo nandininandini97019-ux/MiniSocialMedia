@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}@{{ profile_user.username }} | MiniSocial{% endblock %}
+
+{% block content %}
+<section class="card profile-card">
+    {% if profile_user.profile.avatar %}
+        <img class="profile-avatar"
+             src="{{ profile_user.profile.avatar.url }}"
+             alt="Profile picture">
+    {% else %}
+        <div class="profile-avatar avatar-placeholder">
+            {{ profile_user.username|first|upper }}
+        </div>
+    {% endif %}
+
+    <h1>@{{ profile_user.username }}</h1>
+    <p>{{ profile_user.profile.bio|default:"No bio added yet." }}</p>
+
+    <div class="stats">
+        <span><strong>{{ posts.count }}</strong> posts</span>
+        <span><strong>{{ followers_count }}</strong> followers</span>
+        <span><strong>{{ following_count }}</strong> following</span>
+    </div>
+
+    {% if is_own_profile %}
+        <a class="btn" href="{% url 'edit_profile' %}">Edit profile</a>
+    {% else %}
+        <form method="post"
+              action="{% url 'toggle_follow' profile_user.username %}">
+            {% csrf_token %}
+            <button class="btn" type="submit">
+                {% if is_following %}Unfollow{% else %}Follow{% endif %}
+            </button>
+        </form>
+    {% endif %}
+</section>
+
+<h2 class="section-title">Posts</h2>
+
+<div class="profile-posts">
+    {% for post in posts %}
+        <article class="card mini-post">
+            {% if post.image %}
+                <img src="{{ post.image.url }}" alt="Post image">
+            {% endif %}
+            <p>{{ post.caption }}</p>
+            <p class="muted">♥ {{ post.likes_count }}</p>
+        </article>
+    {% empty %}
+        <p>This user has not posted anything yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

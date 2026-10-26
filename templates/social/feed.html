@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Home | MiniSocial{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <h1>Your social feed</h1>
+    <p>Share a moment with your community.</p>
+</div>
+
+<section class="card composer">
+    <h2>Create a post</h2>
+
+    <form method="post" action="{% url 'create_post' %}"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ post_form.as_p }}
+        <button class="btn" type="submit">Publish post</button>
+    </form>
+</section>
+
+<section class="feed">
+    {% for post in posts %}
+        <article class="card post">
+            <div class="post-author">
+                {% if post.author.profile.avatar %}
+                    <img class="avatar"
+                         src="{{ post.author.profile.avatar.url }}"
+                         alt="Profile picture">
+                {% else %}
+                    <div class="avatar avatar-placeholder">
+                        {{ post.author.username|first|upper }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <a class="username"
+                       href="{% url 'profile' post.author.username %}">
+                        @{{ post.author.username }}
+                    </a>
+                    <div class="muted">
+                        {{ post.created_at|date:"M d, Y H:i" }}
+                    </div>
+                </div>
+            </div>
+
+            <p class="caption">{{ post.caption }}</p>
+
+            {% if post.image %}
+                <img class="post-image"
+                     src="{{ post.image.url }}"
+                     alt="Post image">
+            {% endif %}
+
+            <div class="post-actions">
+                <form method="post"
+                      action="{% url 'toggle_like' post.id %}">
+                    {% csrf_token %}
+                    <button class="action-button" type="submit">
+                        {% if post.liked_by_me %}♥ Unlike{% else %}♡ Like{% endif %}
+                        ({{ post.likes_count }})
+                    </button>
+                </form>
+
+                <span class="muted">
+                    {{ post.comments_count }} comments
+                </span>
+            </div>
+
+            <div class="comments">
+                {% for comment in post.comments.all %}
+                    <p class="comment">
+                        <a href="{% url 'profile' comment.author.username %}">
+                            <strong>@{{ comment.author.username }}</strong>
+                        </a>
+                        {{ comment.text }}
+                    </p>
+                {% empty %}
+                    <p class="muted">No comments yet. Start the conversation!</p>
+                {% endfor %}
+            </div>
+
+            <form class="comment-form" method="post"
+                  action="{% url 'add_comment' post.id %}">
+                {% csrf_token %}
+                <input type="text" name="text"
+                       maxlength="500" required
+                       placeholder="Write a comment...">
+                <button class="btn" type="submit">Comment</button>
+            </form>
+        </article>
+    {% empty %}
+        <div class="card empty-state">
+            <h2>No posts yet</h2>
+            <p>Be the first to share something with the community.</p>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}
